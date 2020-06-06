@@ -40,12 +40,22 @@ package:
     - "**"
 
 functions:
-  hello:
-    handler: dist/handler.hello
+  getEntries:
+    handler: dist/config.getEntries
     events:
       - http:
-          path: /
+          path: entries
           method: get
+  getUrlFromShort:
+    handler: dist/config.getUrlFromShort
+    events:
+      - http:
+          path: entries/{id}
+          method: get
+          request:
+            parameters:
+              paths:
+                id: true
 resources:
   Resources:
     shorturl:
