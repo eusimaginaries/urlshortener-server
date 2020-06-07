@@ -1,4 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { validateUrl } from './engine';
 
 const constructResponse = (entity: any = {}, statusCode: number = 200): APIGatewayProxyResult => {
   return {
@@ -30,7 +31,7 @@ export const getEntries = async (event: APIGatewayProxyEvent, db: DB): Promise<A
 
 export const getUrlFromShort = async (event: APIGatewayProxyEvent, db: DB): Promise<APIGatewayProxyResult> => {
   if (!event.pathParameters || !event.pathParameters["id"]) {
-    return constructResponse({ error: `Id not provided.` }, 400);
+    return constructResponse({ error: `Id not provided.` }, 403);
   }
   const id: string = event.pathParameters["id"];
   const res: UrlEntry | null = await db.findOne(id);
@@ -40,7 +41,31 @@ export const getUrlFromShort = async (event: APIGatewayProxyEvent, db: DB): Prom
   return constructResponse(res);
 }
 
+export const generateShortUrl = async (event: APIGatewayProxyEvent, engine: Engine, db: DB): Promise<APIGatewayProxyResult> => {
+  const bodyObj: GenShortReq = !event.body ? null : JSON.parse(event.body);
+  if (!bodyObj || !bodyObj.url) {
+    return constructResponse({ error: 'URL not specified.' }, 403);
+  }
+
+  const url = bodyObj.url;
+  if (!validateUrl(url)) {
+    return constructResponse({ error: 'URL formatting error. Expect start with either http:// or https://' }, 403);
+  }
+
+  let entry: UrlEntry | null = await db.findOneByUrl(url);
+  if (!!entry) {
+    return constructResponse(entry);
+  }
+
+  let hash: string = engine.generateHash(url);
+  const count = await db.countAllByRoot(hash);
+  entry = <UrlEntry>{ id: `${hash}${count.toString(36)}`, url }
+  db.save(entry);
+  return constructResponse(entry, 201);
+}
+
 export default {
   getEntries,
   getUrlFromShort,
+  generateShortUrl,
 };

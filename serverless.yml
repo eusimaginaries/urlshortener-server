@@ -56,6 +56,12 @@ functions:
             parameters:
               paths:
                 id: true
+  generateShortUrl:
+    handler: dist/config.generateShortUrl
+    events:
+      - http:
+          path: entries
+          method: post
 resources:
   Resources:
     shorturl:

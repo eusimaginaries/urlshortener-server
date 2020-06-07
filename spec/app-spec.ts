@@ -1,13 +1,13 @@
-import "jasmine";
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import 'jasmine';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import '../src/model';
-import { getEntries, getUrlFromShort } from '../src/controller';
-import MockDB from './support/MockDB';
+import { getEntries, getUrlFromShort, generateShortUrl } from '../src/controller';
+import { MockDB, MockEngine } from './support/mock';
 
 describe('Get Entries', () => {
   it('should return pagination result, given 1 record.', async () => {
     // Given
-    const testData: Array<UrlEntry> = [{ id: "key1", url: "http://www.example.com" }];
+    const testData: Array<UrlEntry> = [{ id: 'key1', url: 'http://www.example.com' }];
     const db: DB = new MockDB(testData);
     const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{};
 
@@ -19,7 +19,7 @@ describe('Get Entries', () => {
     const bodyObj: PaginationResult = JSON.parse(res.body);
     expect(bodyObj.numItems).toBe(1);
     expect(bodyObj.lastKey).toBe(null);
-    expect(bodyObj.items[0]).toEqual({ id: "key1", url: "http://www.example.com" });
+    expect(bodyObj.items[0]).toEqual({ id: 'key1', url: 'http://www.example.com' });
   });
 
   it('should return pagination result, given 0 record.', async () => {
@@ -87,7 +87,7 @@ describe('Get Entries', () => {
       { id: 'key3', url: 'http://ex3.sample' },
     ];
     const db: DB = new MockDB(testData);
-    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ queryStringParameters: <{ [name: string]: string }>{ "pageSize": "2" } };
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ queryStringParameters: <{ [name: string]: string }>{ 'pageSize': '2' } };
 
     // When
     const res = await getEntries(event, db);
@@ -112,7 +112,7 @@ describe('Get Entries', () => {
       { id: 'key4', url: 'http://ex4.sample' },
     ];
     const db: DB = new MockDB(testData);
-    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ queryStringParameters: <{ [name: string]: string }>{ "pageSize": "2", "lastKey": "key1" } };
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ queryStringParameters: <{ [name: string]: string }>{ 'pageSize': '2', 'lastKey': 'key1' } };
 
     // When
     const res = await getEntries(event, db);
@@ -137,7 +137,7 @@ describe('Get Entries', () => {
       { id: 'key4', url: 'http://ex4.sample' },
     ];
     const db: DB = new MockDB(testData);
-    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ queryStringParameters: <{ [name: string]: string }>{ "pageSize": "10", "lastKey": "key2" } };
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ queryStringParameters: <{ [name: string]: string }>{ 'pageSize': '10', 'lastKey': 'key2' } };
 
     // When
     const res = await getEntries(event, db);
@@ -160,7 +160,7 @@ describe('Get Entries', () => {
       { id: 'key2', url: 'http://ex2.sample' },
     ];
     const db: DB = new MockDB(testData);
-    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ queryStringParameters: <{ [name: string]: string }>{ "pageSize": "10", "lastKey": "wrongkey" } };
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ queryStringParameters: <{ [name: string]: string }>{ 'pageSize': '10', 'lastKey': 'wrongkey' } };
 
     // When
     const res = await getEntries(event, db);
@@ -184,7 +184,7 @@ it('should return ignore pagesize, given page size less than 1', async () => {
     { id: 'key2', url: 'http://ex2.sample' },
   ];
   const db: DB = new MockDB(testData);
-  const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ queryStringParameters: <{ [name: string]: string }>{ "pageSize": "0" } };
+  const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ queryStringParameters: <{ [name: string]: string }>{ 'pageSize': '0' } };
 
   // When
   const res = await getEntries(event, db);
@@ -238,7 +238,7 @@ describe('Get Url Entry via shortened url', () => {
     expect(bodyObj).toEqual({ error: 'Short url of id: invalidKey not found.' });
   });
 
-  it('should return status 400 given id not specified', async () => {
+  it('should return status 403 given id not specified', async () => {
     // Given
     const testData: Array<UrlEntry> = [
       { id: 'key1', url: 'http://ex1.sample' },
@@ -251,8 +251,129 @@ describe('Get Url Entry via shortened url', () => {
     const res: APIGatewayProxyResult = await getUrlFromShort(event, db);
 
     // Then
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(403);
     const bodyObj: any = JSON.parse(res.body);
     expect(bodyObj).toEqual({ error: 'Id not provided.' });
+  });
+});
+
+describe('Create new Url Entry', () => {
+  it('should return new entry with status 201 given new url.', async () => {
+    // Given
+    const testData: Array<UrlEntry> = [
+      { id: 'key1', url: 'http://ex1.sample' },
+    ];
+    const db: DB = new MockDB(testData);
+    const testHash: { [key: string]: string } = <{ [key: string]: string }>{ 'http://ex2.sample': 'ABCDEF' }
+    const engine: Engine = new MockEngine(testHash);
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ body: JSON.stringify({ url: 'http://ex2.sample' }) };
+
+    // When
+    const res: APIGatewayProxyResult = await generateShortUrl(event, engine, db);
+
+    // Then
+    expect(res.statusCode).toBe(201);
+    const resObj: UrlEntry = JSON.parse(res.body);
+    expect(resObj.url).toEqual('http://ex2.sample');
+    expect(resObj.id).toEqual('ABCDEF0');
+  });
+
+  it('should return entry with status 200 given url previously saved.', async () => {
+    // Given
+    const testData: Array<UrlEntry> = [
+      { id: 'key1', url: 'http://ex1.sample' },
+    ];
+    const db: DB = new MockDB(testData);
+    const testHash: { [key: string]: string } = {};
+    const engine: Engine = new MockEngine(testHash);
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ body: JSON.stringify({ url: 'http://ex1.sample' }) };
+
+    // When
+    const res: APIGatewayProxyResult = await generateShortUrl(event, engine, db);
+
+    // Then
+    expect(res.statusCode).toBe(200);
+    const resObj: UrlEntry = JSON.parse(res.body);
+    expect(resObj.url).toEqual('http://ex1.sample');
+    expect(resObj.id).toEqual('key1');
+  });
+
+  it('should return entry with incremented id with status 201 given root collision.', async () => {
+    // Given
+    const testData: Array<UrlEntry> = [
+      { id: 'key10', url: 'http://ex10.sample' },
+      { id: 'key11', url: 'http://ex11.sample' },
+    ];
+    const db: DB = new MockDB(testData);
+    const testHash: { [key: string]: string } = <{ [key: string]: string }>{ 'http://ex12.sample': 'key1' };
+    const engine: Engine = new MockEngine(testHash);
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ body: JSON.stringify({ url: 'http://ex12.sample' }) };
+
+    // When
+    const res: APIGatewayProxyResult = await generateShortUrl(event, engine, db);
+
+    // Then
+    expect(res.statusCode).toBe(201);
+    const resObj: UrlEntry = JSON.parse(res.body);
+    expect(resObj.url).toEqual('http://ex12.sample');
+    expect(resObj.id).toEqual('key12');
+  });
+
+  it('should return 403 given url not provided.', async () => {
+    // Given
+    const db: DB = new MockDB([]);
+    const engine: Engine = new MockEngine({});
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{};
+
+    // When
+    const res: APIGatewayProxyResult = await generateShortUrl(event, engine, db);
+
+    // Then
+    expect(res.statusCode).toBe(403);
+    const resObj: any = JSON.parse(res.body);
+    expect(resObj).toEqual({ error: 'URL not specified.' });
+  });
+
+  it('should return 200/201 given url starts with http://.', async () => {
+    // Given
+    const db: DB = new MockDB([]);
+    const testHash: { [key: string]: string } = <{ [key: string]: string }>{ 'http://ex1.sample': 'key1' };
+    const engine: Engine = new MockEngine(testHash);
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ body: JSON.stringify({ url: 'http://ex1.sample' }) };
+
+    // When
+    const res: APIGatewayProxyResult = await generateShortUrl(event, engine, db);
+
+    // Then
+    expect(res.statusCode).toBe(201);
+  });
+
+  it('should return 200/201 given url starts with https://.', async () => {
+    // Given
+    const db: DB = new MockDB([]);
+    const testHash: { [key: string]: string } = <{ [key: string]: string }>{ 'https://ex1.sample': 'key1' };
+    const engine: Engine = new MockEngine(testHash);
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ body: JSON.stringify({ url: 'http://ex1.sample' }) };
+
+    // When
+    const res: APIGatewayProxyResult = await generateShortUrl(event, engine, db);
+
+    // Then
+    expect(res.statusCode).toBe(201);
+  });
+
+  it('should return 403 given url starts with invalid format.', async () => {
+    // Given
+    const db: DB = new MockDB([]);
+    const engine: Engine = new MockEngine();
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ body: JSON.stringify({ url: 'http1://ex12.sample' }) };
+
+    // When
+    const res: APIGatewayProxyResult = await generateShortUrl(event, engine, db);
+
+    // Then
+    expect(res.statusCode).toBe(403);
+    const resObj: any = JSON.parse(res.body);
+    expect(resObj).toEqual({ error: 'URL formatting error. Expect start with either http:// or https://' });
   });
 });

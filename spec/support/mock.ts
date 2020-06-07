@@ -1,4 +1,6 @@
-export default class MockDB {
+import engine from '../../src/engine';
+
+export class MockDB {
   private dataSet: Array<UrlEntry>;
   constructor(dataSet: Array<UrlEntry>) {
     if (!dataSet) {
@@ -32,12 +34,31 @@ export default class MockDB {
 
   public findOne = async (id: string): Promise<UrlEntry | null> => {
     const res: UrlEntry | undefined = this.dataSet.find((d) => d.id === id);
-    if (!res) {
-      return null;
-    }
+    if (!res) { return null; }
     return res;
   };
 
-  public findOneByUrl = async (url: string): Promise<UrlEntry | null> => null;
-  public save = async (entry: UrlEntry): Promise<boolean> => false;
+  public findOneByUrl = async (url: string): Promise<UrlEntry | null> => {
+    const res: UrlEntry | undefined = this.dataSet.find((d) => d.url === url);
+    if (!res) { return null; }
+    return res;
+  };
+
+  public save = async (entry: UrlEntry): Promise<boolean> => {
+    this.dataSet.push(entry);
+    return true;  // Should always be true
+  };
+
+  public countAllByRoot = async (root: string): Promise<number> => this.dataSet.filter(d => d.id.startsWith(root)).length;
+}
+
+export class MockEngine {
+  private hashmap: { [name: string]: string };
+
+  constructor(hashmap: { [name: string]: string } = {}) {
+    this.hashmap = hashmap;
+  }
+
+  public validateUrl = (url: string): boolean => engine.validateUrl(url);
+  public generateHash = (url: string): string => this.hashmap[url];
 }
