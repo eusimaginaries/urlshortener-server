@@ -30,12 +30,12 @@ export const getEntries = async (event: APIGatewayProxyEvent, db: DB): Promise<A
 
 export const getUrlFromShort = async (event: APIGatewayProxyEvent, db: DB): Promise<APIGatewayProxyResult> => {
   if (!event.pathParameters || !event.pathParameters["id"]) {
-    return constructResponse({ error: `Short url not provided.` }, 400);
+    return constructResponse({ error: `Id not provided.` }, 400);
   }
   const id: string = event.pathParameters["id"];
   const res: UrlEntry | null = await db.findOne(id);
   if (!res) {
-    return constructResponse({ error: `Short url of id; ${id} not found.` }, 404);
+    return constructResponse({ error: `Short url of id: ${id} not found.` }, 404);
   }
   return constructResponse(res);
 }

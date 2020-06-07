@@ -30,7 +30,14 @@ export default class MockDB {
     return res;
   };
 
-  public findOne = async (id: string): Promise<UrlEntry | null> => null;
+  public findOne = async (id: string): Promise<UrlEntry | null> => {
+    const res: UrlEntry | undefined = this.dataSet.find((d) => d.id === id);
+    if (!res) {
+      return null;
+    }
+    return res;
+  };
+
   public findOneByUrl = async (url: string): Promise<UrlEntry | null> => null;
   public save = async (entry: UrlEntry): Promise<boolean> => false;
 }

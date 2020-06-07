@@ -1,7 +1,7 @@
 import "jasmine";
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import '../src/model';
-import { getEntries } from '../src/controller';
+import { getEntries, getUrlFromShort } from '../src/controller';
 import MockDB from './support/MockDB';
 
 describe('Get Entries', () => {
@@ -198,4 +198,61 @@ it('should return ignore pagesize, given page size less than 1', async () => {
     { id: 'key1', url: 'http://ex1.sample' },
     { id: 'key2', url: 'http://ex2.sample' },
   ]);
+});
+
+describe('Get Url Entry via shortened url', () => {
+  it('should retrieve the entry given exist', async () => {
+    // Given
+    const testData: Array<UrlEntry> = [
+      { id: 'key1', url: 'http://ex1.sample' },
+      { id: 'key2', url: 'http://ex2.sample' },
+    ];
+    const db: DB = new MockDB(testData);
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ pathParameters: <{ [name: string]: string }>{ id: 'key2' } };
+
+    // When
+    const res: APIGatewayProxyResult = await getUrlFromShort(event, db);
+
+    // Then
+    expect(res.statusCode).toBe(200);
+    const bodyObj: UrlEntry = JSON.parse(res.body);
+    expect(bodyObj.id).toBe('key2');
+    expect(bodyObj.url).toBe('http://ex2.sample')
+  });
+
+  it('should return status 404 given invalid', async () => {
+    // Given
+    const testData: Array<UrlEntry> = [
+      { id: 'key1', url: 'http://ex1.sample' },
+      { id: 'key2', url: 'http://ex2.sample' },
+    ];
+    const db: DB = new MockDB(testData);
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{ pathParameters: <{ [name: string]: string }>{ id: 'invalidKey' } };
+
+    // When
+    const res: APIGatewayProxyResult = await getUrlFromShort(event, db);
+
+    // Then
+    expect(res.statusCode).toBe(404);
+    const bodyObj: any = JSON.parse(res.body);
+    expect(bodyObj).toEqual({ error: 'Short url of id: invalidKey not found.' });
+  });
+
+  it('should return status 400 given id not specified', async () => {
+    // Given
+    const testData: Array<UrlEntry> = [
+      { id: 'key1', url: 'http://ex1.sample' },
+      { id: 'key2', url: 'http://ex2.sample' },
+    ];
+    const db: DB = new MockDB(testData);
+    const event: APIGatewayProxyEvent = <APIGatewayProxyEvent>{};
+
+    // When
+    const res: APIGatewayProxyResult = await getUrlFromShort(event, db);
+
+    // Then
+    expect(res.statusCode).toBe(400);
+    const bodyObj: any = JSON.parse(res.body);
+    expect(bodyObj).toEqual({ error: 'Id not provided.' });
+  });
 });
