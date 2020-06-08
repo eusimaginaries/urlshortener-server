@@ -1,4 +1,5 @@
 import engine from '../../src/engine';
+import '../../src/model';
 
 export class MockDB {
   private dataSet: Array<UrlEntry>;
@@ -22,7 +23,7 @@ export class MockDB {
     if (!!pagination && !!pagination.pageSize && pagination.pageSize > 0) {
       pageSize = pagination.pageSize;
     }
-    const res: PaginationResult = <PaginationResult>{ lastKey: null };
+    const res: PaginationResult = <PaginationResult>{ lastKey: undefined };
     const items: Array<UrlEntry> = this.dataSet.slice(startIdx, startIdx + pageSize);
     res.items = items;
     res.numItems = items.length;
@@ -32,16 +33,12 @@ export class MockDB {
     return res;
   };
 
-  public findOne = async (id: string): Promise<UrlEntry | null> => {
-    const res: UrlEntry | undefined = this.dataSet.find((d) => d.id === id);
-    if (!res) { return null; }
-    return res;
+  public findOne = async (id: string): Promise<UrlEntry | undefined> => {
+    return this.dataSet.find((d) => d.id === id);
   };
 
-  public findOneByUrl = async (url: string): Promise<UrlEntry | null> => {
-    const res: UrlEntry | undefined = this.dataSet.find((d) => d.url === url);
-    if (!res) { return null; }
-    return res;
+  public findOneByUrl = async (url: string): Promise<UrlEntry | undefined> => {
+    return this.dataSet.find((d) => d.url === url);
   };
 
   public save = async (entry: UrlEntry): Promise<boolean> => {

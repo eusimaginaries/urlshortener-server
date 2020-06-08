@@ -18,7 +18,7 @@ describe('Get Entries', () => {
     expect(res.statusCode).toBe(200);
     const bodyObj: PaginationResult = JSON.parse(res.body);
     expect(bodyObj.numItems).toBe(1);
-    expect(bodyObj.lastKey).toBe(null);
+    expect(bodyObj.lastKey).toBe(undefined);
     expect(bodyObj.items[0]).toEqual({ id: 'key1', url: 'http://www.example.com' });
   });
 
@@ -35,7 +35,7 @@ describe('Get Entries', () => {
     expect(res.statusCode).toBe(200);
     const bodyObj: PaginationResult = JSON.parse(res.body);
     expect(bodyObj.numItems).toBe(0);
-    expect(bodyObj.lastKey).toBe(null);
+    expect(bodyObj.lastKey).toBe(undefined);
     expect(bodyObj.items).toEqual([]);
   });
 
@@ -128,7 +128,7 @@ describe('Get Entries', () => {
     ]);
   });
 
-  it('should return last key null, given last record is obtained.', async () => {
+  it('should return last key undefined, given last record is obtained.', async () => {
     // Given
     const testData: Array<UrlEntry> = [
       { id: 'key1', url: 'http://ex1.sample' },
@@ -146,7 +146,7 @@ describe('Get Entries', () => {
     expect(res.statusCode).toBe(200);
     const bodyObj: PaginationResult = JSON.parse(res.body);
     expect(bodyObj.numItems).toBe(2);
-    expect(bodyObj.lastKey).toBe(null);
+    expect(bodyObj.lastKey).toBe(undefined);
     expect(bodyObj.items).toEqual([
       { id: 'key3', url: 'http://ex3.sample' },
       { id: 'key4', url: 'http://ex4.sample' },
@@ -169,7 +169,7 @@ describe('Get Entries', () => {
     expect(res.statusCode).toBe(200);
     const bodyObj: PaginationResult = JSON.parse(res.body);
     expect(bodyObj.numItems).toBe(2);
-    expect(bodyObj.lastKey).toBe(null);
+    expect(bodyObj.lastKey).toBe(undefined);
     expect(bodyObj.items).toEqual([
       { id: 'key1', url: 'http://ex1.sample' },
       { id: 'key2', url: 'http://ex2.sample' },
@@ -193,7 +193,7 @@ it('should return ignore pagesize, given page size less than 1', async () => {
   expect(res.statusCode).toBe(200);
   const bodyObj: PaginationResult = JSON.parse(res.body);
   expect(bodyObj.numItems).toBe(2);
-  expect(bodyObj.lastKey).toBe(null);
+  expect(bodyObj.lastKey).toBe(undefined);
   expect(bodyObj.items).toEqual([
     { id: 'key1', url: 'http://ex1.sample' },
     { id: 'key2', url: 'http://ex2.sample' },

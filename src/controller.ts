@@ -9,7 +9,7 @@ const constructResponse = (entity: any = {}, statusCode: number = 200): APIGatew
 };
 
 const extractPageInfo = (event: APIGatewayProxyEvent): PaginationRequest => {
-  const pagination: PaginationRequest = { pageSize: 10, lastKey: null };
+  const pagination: PaginationRequest = { pageSize: 10, lastKey: undefined };
   if (!event.queryStringParameters) {
     return pagination;
   }
@@ -34,7 +34,7 @@ export const getUrlFromShort = async (event: APIGatewayProxyEvent, db: DB): Prom
     return constructResponse({ error: `Id not provided.` }, 403);
   }
   const id: string = event.pathParameters["id"];
-  const res: UrlEntry | null = await db.findOne(id);
+  const res: UrlEntry | undefined = await db.findOne(id);
   if (!res) {
     return constructResponse({ error: `Short url of id: ${id} not found.` }, 404);
   }
@@ -42,7 +42,7 @@ export const getUrlFromShort = async (event: APIGatewayProxyEvent, db: DB): Prom
 }
 
 export const generateShortUrl = async (event: APIGatewayProxyEvent, engine: Engine, db: DB): Promise<APIGatewayProxyResult> => {
-  const bodyObj: GenShortReq = !event.body ? null : JSON.parse(event.body);
+  const bodyObj: GenShortReq | undefined = !event.body ? undefined : JSON.parse(event.body);
   if (!bodyObj || !bodyObj.url) {
     return constructResponse({ error: 'URL not specified.' }, 403);
   }
@@ -52,7 +52,7 @@ export const generateShortUrl = async (event: APIGatewayProxyEvent, engine: Engi
     return constructResponse({ error: 'URL formatting error. Expect start with either http:// or https://' }, 403);
   }
 
-  let entry: UrlEntry | null = await db.findOneByUrl(url);
+  let entry: UrlEntry | undefined = await db.findOneByUrl(url);
   if (!!entry) {
     return constructResponse(entry);
   }

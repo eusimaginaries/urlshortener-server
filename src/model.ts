@@ -1,12 +1,12 @@
 type PaginationRequest = {
   pageSize: number,
-  lastKey: string | null,
+  lastKey?: string,
 };
 
 type PaginationResult = {
   items: Array<any>,
   numItems: number,
-  lastKey: string | null,
+  lastKey?: string,
 };
 
 type UrlEntry = {
@@ -20,8 +20,8 @@ type GenShortReq = {
 
 interface DB {
   findAll(pagination: PaginationRequest): Promise<PaginationResult>;
-  findOne(id: string): Promise<UrlEntry | null>;
-  findOneByUrl(url: string): Promise<UrlEntry | null>;
+  findOne(id: string): Promise<UrlEntry | undefined>;
+  findOneByUrl(url: string): Promise<UrlEntry | undefined>;
   save(entry: UrlEntry): Promise<boolean>;
   countAllByRoot(root: string): Promise<number>;
 };
