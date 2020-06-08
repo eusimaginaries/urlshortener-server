@@ -17,3 +17,30 @@ full URL without further clicks, so that I can type less into my browser.
 3. Persistence of the shortened URLs across system reboots (e.g. relational databases like
 MySQL)
 4. Write 1 or 2 unit tests to demonstrate you understand how to write automated tests
+
+## Scripts ##
+1. `yarn build` Builds the typescript source file into the _dist_ folder.
+2. `yarn deploy` Deploys to aws services.
+3. `yarn test` Run functional tests scripts.
+
+## Deploying ##
+This application leverages on serverless to deploy to AWS.
+1. Create access keys to be able to communicate with AWS.
+2. Insert the keys into `aws-secret.sh` using _aws-secret-sample.sh_ as template
+3. Perform `yarn deploy`.
+
+## API ##
+- Retrieve previously queried entries (paged: default size 10)
+```
+GET .../entries
+```
+- Retrieve the url using the id.
+```
+GET .../entries/:id
+```
+- Create a new entry if original url is not queried before.
+```
+POST .../entries
+BODY {
+  "url": {url with http https}
+}
