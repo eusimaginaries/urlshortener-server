@@ -10,7 +10,7 @@ export const findAll = async (pagination: PaginationRequest): Promise<Pagination
     ExclusiveStartKey: !pagination.lastKey ? undefined : <Key>{ id: pagination.lastKey }
   };
   const data = await ddb.scan(params).promise();
-  return <PaginationResult>{ items: !data.Items ? [] : data.Items, numItems: data.Count, lastKey: data.LastEvaluatedKey }
+  return <PaginationResult>{ items: !data.Items ? [] : data.Items, numItems: data.Count, lastKey: !!data.LastEvaluatedKey ? (<Key>data.LastEvaluatedKey).id : undefined }
 }
 
 export const findOne = async (id: string): Promise<UrlEntry | undefined> => {
