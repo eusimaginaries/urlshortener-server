@@ -4,6 +4,10 @@ import { validateUrl } from './engine';
 const constructResponse = (entity: any = {}, statusCode: number = 200): APIGatewayProxyResult => {
   return {
     statusCode,
+    headers: {
+      "Access-Control-Allow-Origin": "*", // Required for CORS support to work
+      "Access-Control-Allow-Credentials": true // Required for cookies, authorization headers with HTTPS 
+    },
     body: JSON.stringify(entity),
   }
 };
@@ -59,7 +63,7 @@ export const generateShortUrl = async (event: APIGatewayProxyEvent, engine: Engi
 
   let hash: string = engine.generateHash(url);
   const count = await db.countAllByRoot(hash);
-  entry = <UrlEntry>{ id: `${hash}${count.toString(36)}`, url }
+  entry = <UrlEntry>{ id: `${hash}${count.toString(36)}`, rootKey: hash, url }
   db.save(entry);
   return constructResponse(entry, 201);
 }

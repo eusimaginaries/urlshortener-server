@@ -43,11 +43,15 @@ export const save = async (entry: UrlEntry): Promise<boolean> => {
   return true;
 };
 
-export const countAllByRoot = async (root: string): Promise<number> => {
-  const params: ScanInput = {
+export const countAllByRoot = async (rootKey: string): Promise<number> => {
+  const params: QueryInput = {
     TableName: "shorturl",
+    IndexName: "RootKeyIndex",
+    KeyConditionExpression: '#k = :rootKey',
+    ExpressionAttributeValues: <ExpressionAttributeValueMap>{ ":rootKey": rootKey },
+    ExpressionAttributeNames: { '#k': 'rootKey' },
   };
-  const data = await ddb.scan(params).promise();
+  const data = await ddb.query(params).promise();
   return !data.Count ? 0 : data.Count
 };
 

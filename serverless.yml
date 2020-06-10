@@ -44,12 +44,14 @@ functions:
       - http:
           path: entries
           method: get
+          cors: true
   getUrlFromShort:
     handler: dist/config.getUrlFromShort
     events:
       - http:
           path: entries/{id}
           method: get
+          cors: true
           request:
             parameters:
               paths:
@@ -60,6 +62,7 @@ functions:
       - http:
           path: entries
           method: post
+          cors: true
 resources:
   Resources:
     shorturl:
@@ -68,6 +71,8 @@ resources:
         TableName: shorturl
         AttributeDefinitions:
           - AttributeName: id
+            AttributeType: S
+          - AttributeName: rootKey
             AttributeType: S
           - AttributeName: url
             AttributeType: S
@@ -84,6 +89,15 @@ resources:
               WriteCapacityUnits: 1
             KeySchema:
               - AttributeName: url
+                KeyType: HASH
+            Projection:
+              ProjectionType: 'ALL'
+          - IndexName: RootKeyIndex
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+            KeySchema:
+              - AttributeName: rootKey
                 KeyType: HASH
             Projection:
               ProjectionType: 'ALL'

@@ -12,6 +12,7 @@ type PaginationResult = {
 type UrlEntry = {
   id: string,
   url: string,
+  rootKey: string,
 };
 
 type GenShortReq = {
