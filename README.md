@@ -44,3 +44,6 @@ POST .../entries
 BODY {
   "url": {url with http https}
 }
+
+## Issues ##
+Due to dynamodb usage, it seems that write operations only shows up 1 transaction later. More investigations will be required.
