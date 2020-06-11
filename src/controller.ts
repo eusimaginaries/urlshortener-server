@@ -64,7 +64,7 @@ export const generateShortUrl = async (event: APIGatewayProxyEvent, engine: Engi
   let hash: string = engine.generateHash(url);
   const count = await db.countAllByRoot(hash);
   entry = <UrlEntry>{ id: `${hash}${count.toString(36)}`, rootKey: hash, url }
-  db.save(entry);
+  await db.save(entry);
   return constructResponse(entry, 201);
 }
 

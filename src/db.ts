@@ -6,6 +6,7 @@ const ddb = new AWS.DynamoDB.DocumentClient();
 export const findAll = async (pagination: PaginationRequest): Promise<PaginationResult> => {
   const params: ScanInput = {
     TableName: "shorturl",
+    ConsistentRead: true,
     Limit: pagination.pageSize,
     ExclusiveStartKey: !pagination.lastKey ? undefined : <Key>{ id: pagination.lastKey }
   };
@@ -15,6 +16,7 @@ export const findAll = async (pagination: PaginationRequest): Promise<Pagination
 
 export const findOne = async (id: string): Promise<UrlEntry | undefined> => {
   const params: GetItemInput = {
+    ConsistentRead: true,
     TableName: "shorturl",
     Key: <Key>{ id },
   };
